@@ -1,116 +1,114 @@
-# BudgetBD — Student Budget Planner
+# BudgetBD — the student money ledger
 
-A budget tracker for Bangladeshi university students, built as a Web Programming
-group project at Uttara University. Five pages, matching the approved mockup:
-dashboard, transaction ledger, category budgets, spending charts and a
-semester-wide matrix.
+**প্রতিটি টাকার হিসাব — এক খাতায়।** A budget planner built for Bangladeshi university students:
+allowance over bKash on the 1st, the mess bill on the 3rd, rickshaw every day, photocopies before
+exams — and a clear answer to *"how much can I still spend today?"*
 
-Written in **plain JavaScript** on **Next.js (App Router)**. Every page is a
-Server Component that reads a local SQLite database and ships finished HTML —
-the numbers are in the source of the page, not fetched afterwards in the browser.
+> **Try it:** run it locally (below) and click **Try the demo**. Every visitor gets a private sandbox
+> with six months of realistic data, deleted automatically after 24 hours.
+
+## Features
+
+| | |
+|---|---|
+| **Dashboard** | Wallet balance, money parked in goals, *safe-to-spend per day*, month-over-month change, a spending heat-calendar, budget health, and a receipt of recent entries. |
+| **Ledger** | Grouped by day, filter by type / category / payment method / month, full-text search, pagination. Add or edit from anywhere (press <kbd>N</kbd>), tap a row on a phone to edit. |
+| **Budget** | A monthly cap per category with amber/red states, an "even pace" marker for today, and last month for comparison. |
+| **Goals** | Savings goals with deadlines, deposits and withdrawals, and the monthly amount needed to land on time. |
+| **Insights** | Plain-English findings ("At this pace you run dry around the 24th", "Thursdays cost you the most"), a category donut, a six-month trend, weekday pattern, payment-method split, biggest expenses. |
+| **Semester** | Month × category matrix for a whole term, generated from the ledger. |
+| **Settings** | Profile, password change, sign out other devices, CSV export, delete account. |
+| **Local by design** | Categories like Mess Bill, Rickshaw, Recharge & Data, Photocopy & Books; payment via Cash, bKash, Nagad, Rocket, Card or Bank; dates in Asia/Dhaka. |
+
+Light and dark themes, fully responsive (phone tab bar with a thumb-reach **+**, tablet icon rail,
+desktop sidebar), keyboard accessible, and every animation respects `prefers-reduced-motion`.
 
 ## Running it
 
+Requires **Node 22.13+** (for the built-in `node:sqlite`).
+
 ```bash
 npm install
-npm run seed     # optional: loads the mockup's sample semester
+npm run seed     # optional: a local account with sample data (credentials are printed)
 npm run dev      # http://localhost:3000
 ```
 
-`npm run seed` fills the database with the six-month sample from the mockup so
-every page has something to show. It wipes existing rows first, so skip it if you
-have already entered your own data.
-
-| Script | What it does |
+| Script | |
 |---|---|
 | `npm run dev` | Development server |
-| `npm run build` | Production build |
-| `npm start` | Serve the production build |
-| `npm run seed` | Reset the database to the mockup's sample data |
+| `npm run build` / `npm start` | Production build / serve it |
+| `npm test` | Unit tests (`node --test`, no extra dependencies) |
 | `npm run lint` | ESLint |
+| `npm run seed` | Create or reset `student@budgetbd.local` with six months of data |
 
-## How it works
+Set `DATABASE_PATH` to put the SQLite file somewhere other than `./data/budget.db`.
 
-**Storage.** SQLite via Node's built-in `node:sqlite` — no native compilation, no
-ORM, no external database. The file lives at `data/budget.db` and is created
-automatically on first run. It is gitignored.
+## How it's built
 
-**Reads.** Pages call a function from `src/db.js` and render the result. All the
-grouping and totalling happens in SQL on the server.
+**Next.js 16 App Router, React 19, Tailwind CSS 4, SQLite — and nothing else of note.** No ORM, no
+auth library, no charting library, no state manager.
 
-**Writes.** Forms post to Server Actions in `src/app/actions.js`, which validate,
-write, and revalidate the affected pages. Because they are ordinary
-`<form action={…}>` submissions, adding a transaction still works with
-JavaScript disabled.
+- **Server-first.** Every page is a Server Component that queries SQLite and ships finished HTML.
+  Client JavaScript is limited to forms, navigation and the add/edit dialog.
+- **Mutations are Server Actions** (`src/app/actions/`). Each resolves the user, validates every
+  field on the server, and writes with `user_id = ?` in the `WHERE` clause.
+- **Money is integer poisha** (1 ৳ = 100 poisha), never floating point, with `CHECK` constraints in
+  the schema as a last line of defence.
+- **Dates are `YYYY-MM-DD` strings fixed to Dhaka time**, so a 1 a.m. rickshaw fare never lands in
+  the wrong month because the server runs in UTC.
+- **Charts are hand-written SVG/HTML** rendered on the server. They have hover and keyboard
+  tooltips, and the colour palette is validated for colour-vision deficiency and contrast in both
+  themes. Colour follows the category, never its rank.
+- **Versioned migrations** via `PRAGMA user_version` (`src/lib/schema.js`). The old single-user
+  tables are renamed to `legacy_*`, never dropped.
 
-**Money** is stored as an integer number of *poisha* (1 Taka = 100 poisha), never
-as a floating-point number — that is how budget totals drift by a poisha and stop
-reconciling with the ledger.
+### Security
 
-**Dates** are plain `'YYYY-MM-DD'` strings, and months are `'YYYY-MM'`. The server
-may run in UTC while the student's phone runs Asia/Dhaka (UTC+6); deriving "today"
-from a `Date` would disagree between the two for six hours a day and file a
-late-night rickshaw fare into the wrong month. Fixing the offset in one place
-(`src/utils.js`) avoids that, and makes month filtering an exact string prefix
-match that the index can use.
+| Threat | Defence |
+|---|---|
+| Stolen database | Passwords hashed with **scrypt** (N=2¹⁵), per-user salt. Sessions stored only as **SHA-256 of the token**. |
+| Session theft via XSS | Session cookie is `httpOnly`, `SameSite=Lax`, `Secure`, `__Host-` prefixed in production. |
+| XSS | **Per-request CSP nonce** with `strict-dynamic` (`src/proxy.js`); React escapes output; tooltips use `attr()` text. |
+| CSRF | SameSite cookies plus Next.js Server Actions' Origin check. |
+| Brute force | Sliding-window **rate limits** in SQLite: per IP and per email for login, per IP for signup and demo. |
+| User enumeration | One error message for wrong email or password, and a dummy scrypt run so both take equal time. |
+| IDOR | Every query and write is scoped to the session's `user_id`. |
+| Open redirect | `?next=` accepts same-origin paths only (`safeNextPath`, tested). |
+| CSV / formula injection | Export prefixes `= + - @` cells with `'` (tested). |
+| Clickjacking, sniffing | `frame-ancestors 'none'`, `X-Frame-Options`, `nosniff`, HSTS, `Referrer-Policy`, `Permissions-Policy`. |
 
-**Dark mode** is stored in a cookie rather than `localStorage`, so the server
-knows it and can stamp `data-theme` on `<html>` while rendering. That is what
-removes the flash of the wrong theme on first paint.
-
-## Files
+## Project layout
 
 ```
 src/
+  proxy.js                CSP nonce + early auth redirect (Next 16's middleware)
   app/
-    layout.jsx           shell: top bar, mobile tab bar, theme
-    page.jsx             Dashboard
-    transactions/page.jsx
-    budget/page.jsx
-    charts/page.jsx
-    semester/page.jsx
-    actions.js           every server action (all mutations)
-    globals.css          design tokens, light + dark
-  db.js                  SQLite connection + every query
-  schema.js              table definitions, shared with the seed script
-  utils.js               money, dates, categories, navigation
-  ui.jsx                 server-rendered presentational pieces
-  client.jsx             everything interactive: nav, theme toggle, forms
-  charts.jsx             Chart.js doughnut + bar
-scripts/seed.mjs         sample data from the mockup
+    layout.jsx            fonts, theme cookie, toasts
+    (site)/               landing, login, signup
+    (app)/                signed-in shell + dashboard, transactions, budget, goals,
+                          insights, semester, settings
+    actions/              server actions: auth, ledger, account
+    api/export/route.js   CSV download
+  components/             ui (server), charts (server SVG), forms / dialog / shell (client)
+  lib/
+    db.js schema.js       connection, migrations
+    auth.js password.js   sessions, rate limits, scrypt
+    queries.js            every read, all scoped by user
+    insights.js           the plain-English findings (pure)
+    utils.js csv.js       money, dates, categories, CSV (pure)
+    sample-data.js        the demo semester
+tests/                    node --test suites for the pure modules
 ```
 
-If it is not in `client.jsx` or `charts.jsx`, it never runs in the browser.
+## Deploying
 
-## The pages
+The app keeps state in one SQLite file, so it needs a host with a **persistent disk**: a VPS,
+Railway, Render or Fly.io with a volume, pointing `DATABASE_PATH` at the volume. Serverless
+platforms with ephemeral filesystems (e.g. Vercel) would lose data between invocations.
 
-**Dashboard** — balance, total income, total expenses, and the share of income
-still unspent. Quick-add form and the five most recent entries; tapping one
-filters the ledger to that category.
+Behind a reverse proxy, make sure it sets `X-Forwarded-For` and `X-Forwarded-Proto`; the rate
+limiter and the CSP's `upgrade-insecure-requests` read them.
 
-**Transactions** — the full log, filterable by type, month and free-text search.
-Filters live in the URL, so the list is genuinely server-rendered, shareable, and
-correct with the back button. A table on desktop; the same rows as cards on a
-phone, because a five-column table cannot be read at 375px.
+---
 
-**Budget** — a monthly limit per category, with spending summed from the ledger
-rather than stored, so the two can never disagree. Status is OK below 80%, Close
-from 80%, Over at 100% and beyond; the percentage is not clamped, so a 140%
-overspend reads as 140%.
-
-**Charts** — a doughnut of spending by category for the selected month and a
-six-month trend bar chart. The server groups the data; the client only draws.
-The categorical palette is fixed-order and validated for colour-vision
-separation and contrast in both light and dark.
-
-**Semester** — the month × category matrix from the mockup, generated entirely
-from the ledger with totals for expenses, income and balance per month. Nothing
-in it is typed in by hand. On a phone it scrolls sideways inside its own box with
-the category column pinned; the page itself never scrolls sideways.
-
-## Notes
-
-- The database is a single local file, so the app is single-user by design —
-  there are no accounts, and nothing leaves the machine.
-- Categories are localised on purpose (mess bill, rickshaw fare, mobile recharge,
-  photocopy) and are defined in `src/utils.js`.
+Started as a Web Programming group project at Uttara University.
