@@ -1,0 +1,23 @@
+# Rebuilt inside the image
+node_modules
+.next
+
+# Never bake a database (or anyone's data) into an image
+data
+*.db
+*.db-shm
+*.db-wal
+
+# Secrets and local config
+.env*
+!.env.example
+
+# Not needed to build or run
+.git
+.github
+tests
+*.md
+!README.md
+Dockerfile
+.dockerignore
+npm-debug.log*
