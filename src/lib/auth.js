@@ -5,6 +5,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
+import { pickClientIp } from "./client-ip.js";
 import { all, one, run } from "./db.js";
 
 /**
@@ -116,13 +117,14 @@ export const countSessions = (userId) =>
  * than memory so a restart does not hand an attacker a fresh budget, and it
  * needs no Redis for a single-server app.                               */
 
+/** See client-ip.js for why the *last* trusted hop, not the first entry. */
 export async function clientIp() {
   const h = await headers();
-  // The first hop is the client when a reverse proxy appends to the header.
-  // Behind no proxy this header is client-controlled, so per-email limits
-  // (which an attacker cannot rotate) back it up below.
-  const forwarded = h.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return (forwarded || h.get("x-real-ip") || "local").slice(0, 64);
+  return pickClientIp({
+    forwardedFor: h.get("x-forwarded-for"),
+    realIp: h.get("x-real-ip"),
+    trustedHops: Number(process.env.TRUSTED_PROXY_HOPS ?? 1),
+  });
 }
 
 export function isRateLimited(key, limit, windowMs) {

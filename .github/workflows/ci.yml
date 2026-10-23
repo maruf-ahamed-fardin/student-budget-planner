@@ -2,17 +2,24 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, redesign]
   pull_request:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
+    name: Lint, test, build (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
+        # 22 ships npm 10, 24 ships npm 11 — the lockfile must satisfy both.
         node: [22, 24]
     steps:
       - uses: actions/checkout@v4
@@ -24,3 +31,37 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+  docker:
+    name: Docker image boots and is healthy
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t budgetbd:ci .
+      - name: Run with a fresh volume
+        run: docker run -d --name app -p 3000:3000 -v budgetbd-data:/data budgetbd:ci
+      - name: Wait for /api/health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/api/health; then echo; exit 0; fi
+            sleep 2
+          done
+          docker logs app
+          exit 1
+      - name: Smoke test pages and headers
+        run: |
+          curl -fsS -o /dev/null http://localhost:3000/
+          curl -fsS -o /dev/null http://localhost:3000/login
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/dashboard)" = "307"
+          curl -sI http://localhost:3000/ | grep -i "content-security-policy"
+          test "$(docker inspect -f '{{.Config.User}}' app)" = "node"
+      - name: Restarts cleanly on an existing volume
+        run: |
+          docker restart app
+          for i in $(seq 1 30); do curl -fsS http://localhost:3000/api/health && exit 0; sleep 2; done
+          docker logs app
+          exit 1
