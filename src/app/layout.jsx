@@ -1,31 +1,39 @@
+import { Bricolage_Grotesque, Caveat, Hind_Siliguri, JetBrains_Mono } from "next/font/google";
 import { cookies } from "next/headers";
-import Link from "next/link";
-import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
-
-import { BottomNav, NavLinks, ThemeToggle } from "@/client";
-import { Icon } from "@/ui";
 
 import "./globals.css";
 
 /**
- * Inter has no Bengali coverage, so the Taka sign (৳) falls through to the
- * system Bengali faces listed in `--font-sans` (globals.css). Bundling a whole
- * Bengali webfont for one glyph is not worth the download.
+ * Four faces, each with one job:
+ *   Bricolage Grotesque — headings and UI, a grotesk with some character
+ *   JetBrains Mono      — every figure, so columns of Taka line up
+ *   Caveat              — margin notes, the hand-written voice
+ *   Hind Siliguri       — Bangla text and the ৳ sign, which the others lack
+ * All self-hosted by next/font at build time: no request to Google at runtime,
+ * which is also what lets the CSP say `font-src 'self'`.
  */
-const inter = Inter({ variable: "--font-inter", subsets: ["latin"], display: "swap" });
+const bricolage = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-bricolage", display: "swap" });
+const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", display: "swap", weight: ["400", "500", "600", "700"] });
+const caveat = Caveat({ subsets: ["latin"], variable: "--font-caveat", display: "swap", weight: ["500", "600", "700"] });
+const hind = Hind_Siliguri({ subsets: ["bengali"], variable: "--font-hind", display: "swap", weight: ["400", "600", "700"] });
 
 export const metadata = {
-  title: { default: "BudgetBD — Student Budget Planner", template: "%s · BudgetBD" },
+  title: { default: "BudgetBD — the student money ledger", template: "%s · BudgetBD" },
   description:
-    "Track allowance, mess bills and rickshaw fares, set category budgets and plan a semester — built for Bangladeshi university students.",
+    "Track allowance, mess bills, rickshaw fares and bKash spends. Set budgets, save for goals and see a whole semester at a glance — built for Bangladeshi university students.",
+  applicationName: "BudgetBD",
+  formatDetection: { telephone: false },
 };
 
 export const viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0b1226",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f3efe4" },
+    { media: "(prefers-color-scheme: dark)", color: "#11100e" },
+  ],
 };
 
 export default async function RootLayout({ children }) {
@@ -37,37 +45,27 @@ export default async function RootLayout({ children }) {
     <html
       lang="en"
       data-theme={theme}
-      className={inter.variable}
+      className={`${bricolage.variable} ${mono.variable} ${caveat.variable} ${hind.variable}`}
       suppressHydrationWarning
     >
-      <body>
-        {/* Navy in both themes, so the brand surface stays constant. */}
-        <header className="sticky top-0 z-50 bg-navy-900">
-          <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4">
-            <Link href="/" className="flex items-center gap-2 font-semibold">
-              <span className="grid size-7 place-items-center rounded bg-gold-500 text-navy-950">
-                <Icon name="wallet" size={16} strokeWidth={2} />
-              </span>
-              <span className="text-white">
-                Budget<span className="text-gold-400">BD</span>
-              </span>
-            </Link>
-
-            <NavLinks />
-            <ThemeToggle theme={theme} />
-          </div>
-        </header>
-
-        <main className="mx-auto w-full max-w-5xl px-4 py-5">{children}</main>
-
-        <footer className="mx-auto w-full max-w-5xl px-4 pb-8">
-          <p className="border-t border-line pt-4 text-center text-xs text-ink-muted">
-            BudgetBD · Web Programming group project · Uttara University
-          </p>
-        </footer>
-
-        <BottomNav />
-        <Toaster position="top-center" richColors />
+      <body className="min-h-dvh">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-hl focus:px-4 focus:py-2 focus:font-semibold focus:text-[#1a1915]"
+        >
+          Skip to content
+        </a>
+        {children}
+        <Toaster
+          position="top-center"
+          theme={theme}
+          toastOptions={{
+            classNames: {
+              toast: "!rounded-xl !border-[1.5px] !border-edge !bg-card !text-ink !shadow-[3px_3px_0_var(--shadow)] !font-[family-name:var(--font-display)]",
+              description: "!text-ink-3",
+            },
+          }}
+        />
       </body>
     </html>
   );

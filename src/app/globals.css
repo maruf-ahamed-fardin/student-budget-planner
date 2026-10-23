@@ -1,123 +1,158 @@
 @import "tailwindcss";
 
+/* ==================================================================== *
+ * BudgetBD — "the hostel ledger"                                        *
+ *                                                                      *
+ * The look borrows from the khata every mess manager keeps: graph       *
+ * paper, ink-ruled boxes with a hard shadow, figures in a typewriter    *
+ * mono, a yellow highlighter over the number that matters, and the      *
+ * green and red of the flag for money in and money out.                 *
+ * ==================================================================== */
+
 /* Dark mode is driven by data-theme on <html>, stamped during SSR from a
    cookie, so the first painted frame is already the right theme. */
 @custom-variant dark ([data-theme="dark"] &);
 
-/* Brand scales — fixed, identical in both themes. */
-@theme {
-  --color-navy-950: #070c1c;
-  --color-navy-900: #0b1226;
-  --color-navy-800: #111a38;
-  --color-navy-700: #1a2447;
-
-  --color-gold-500: #d9a427;
-  --color-gold-400: #e8bc55;
-
-  --color-mint-400: #34d399;
-  --color-rose-400: #fb7185;
-
-  --radius-card: 0.625rem;
-  /* Inter covers Latin; the Bengali faces after it supply the ৳ sign. */
-  --font-sans:
-    var(--font-inter), "Noto Sans Bengali", "Nirmala UI", Vrinda, ui-sans-serif,
-    system-ui, sans-serif;
-
-  --animate-grow: grow 0.5s ease-out both;
-
-  @keyframes grow {
-    from {
-      transform: scaleX(0);
-    }
-    to {
-      transform: scaleX(1);
-    }
-  }
-}
-
-/* Semantic tokens — these flip with the theme. `@theme inline` keeps the
-   utilities pointing at the var, so the cascade does the swapping. */
 @theme inline {
-  --color-bg: var(--bg);
-  --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
-  --color-line: var(--line);
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-card-2: var(--card-2);
   --color-ink: var(--ink);
-  --color-ink-muted: var(--ink-muted);
-  --color-accent: var(--accent);
-  --color-income: var(--income);
-  --color-expense: var(--expense);
-  --color-warn: var(--warn);
-  --color-income-wash: var(--income-wash);
-  --color-expense-wash: var(--expense-wash);
-  --color-warn-wash: var(--warn-wash);
-  --color-accent-wash: var(--accent-wash);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-edge: var(--edge);
+  --color-rule: var(--rule);
+  --color-green: var(--green);
+  --color-green-wash: var(--green-wash);
+  --color-red: var(--red);
+  --color-red-wash: var(--red-wash);
+  --color-amber: var(--amber);
+  --color-amber-wash: var(--amber-wash);
+  --color-hl: var(--hl);
+
+  --font-display: var(--font-bricolage), var(--font-hind), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), var(--font-hind), ui-monospace, monospace;
+  --font-hand: var(--font-caveat), cursive;
+  --font-bn: var(--font-hind), var(--font-bricolage), sans-serif;
 }
 
 :root {
-  --bg: #f6f7fa;
-  --surface: #ffffff;
-  --surface-2: #f2f4f8;
-  --line: #e3e7ee;
-  --ink: #131a2b;
-  --ink-muted: #6b7688;
-  --accent: #a67c14;
-  --income: #067a55;
-  --expense: #d02445;
-  --warn: #a55b09;
-  --income-wash: #e8f6f1;
-  --expense-wash: #fdecef;
-  --warn-wash: #fcf2e4;
-  --accent-wash: #faf3e2;
+  --paper: #f3efe4;
+  --paper-line: rgb(26 25 21 / 0.06);
+  --card: #fffdf8;
+  --card-2: #f6f1e5;
+  --ink: #1a1915;
+  --ink-2: #4b473e;
+  --ink-3: #736d5f;
+  --edge: #1a1915;
+  --rule: #e3dccb;
+  --shadow: #1a1915;
+
+  --green: #0b6e4f;
+  --green-wash: #dcefe5;
+  --red: #c42f37;
+  --red-wash: #fbe2df;
+  --amber: #9a5806;
+  --amber-wash: #faeccd;
+  --hl: #ffd84a;
+
+  /* Categorical chart slots, validated as a set on the card surface.
+     Slot 0 is the neutral used for "Other". */
+  --series-0: #a39c8c;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #6250d6;
 
   color-scheme: light;
 }
 
 [data-theme="dark"] {
-  --bg: #0a0f1e;
-  --surface: #121a2e;
-  --surface-2: #1a2338;
-  --line: #24304a;
-  --ink: #e8ecf4;
-  --ink-muted: #93a0b8;
-  --accent: #e8bc55;
-  --income: #34d399;
-  --expense: #fb7185;
-  --warn: #fbbf24;
-  --income-wash: #102b23;
-  --expense-wash: #2e1620;
-  --warn-wash: #2b2210;
-  --accent-wash: #272010;
+  --paper: #11100e;
+  --paper-line: rgb(241 236 224 / 0.035);
+  --card: #1b1a17;
+  --card-2: #23211d;
+  --ink: #f1ece0;
+  --ink-2: #c8c1b1;
+  --ink-3: #958e7f;
+  --edge: #5a554b;
+  --rule: #2f2c27;
+  --shadow: #000000;
+
+  --green: #43d095;
+  --green-wash: #142a20;
+  --red: #ff6f6b;
+  --red-wash: #33191a;
+  --amber: #f3b24c;
+  --amber-wash: #2e2311;
+  --hl: #e5bf2e;
+
+  --series-0: #6f695e;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
 
   color-scheme: dark;
 }
 
+/* ------------------------------------------------------------------ *
+ * Base                                                                *
+ * ------------------------------------------------------------------ */
+
 @layer base {
-  body {
-    background-color: var(--bg);
-    color: var(--ink);
-    font-family: var(--font-sans);
-    font-size: 0.875rem;
-    -webkit-font-smoothing: antialiased;
-    /* Room for the fixed mobile tab bar; cleared at md. */
-    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
   }
 
-  @media (min-width: 768px) {
-    body {
-      padding-bottom: 0;
-    }
+  body {
+    background-color: var(--paper);
+    /* Graph paper, 24px squares. Fixed so it doesn't crawl while scrolling. */
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--hl);
+    color: #1a1915;
   }
 
   :focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--ink);
     outline-offset: 2px;
-    border-radius: 3px;
+    border-radius: 4px;
   }
 
-  /* Figures line up in tables and stat rows without a monospace font. */
+  h1, h2, h3 {
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  /* Figures line up in tables and stat rows. */
   .tnum {
+    font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  [hidden] {
+    display: none !important;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -125,49 +160,656 @@
     *::before,
     *::after {
       animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      animation-delay: 0ms !important;
       transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
     }
   }
 }
 
+/* ------------------------------------------------------------------ *
+ * Components                                                          *
+ * ------------------------------------------------------------------ */
+
 @layer components {
+  /* An ink-ruled box with a hard, offset shadow — a sticker, not a cloud. */
   .card {
-    background-color: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-card);
+    position: relative;
+    background-color: var(--card);
+    border: 1.5px solid var(--edge);
+    border-radius: 12px;
+    box-shadow: 3px 3px 0 var(--shadow);
   }
+
+  .card-flat {
+    background-color: var(--card);
+    border: 1.5px solid var(--rule);
+    border-radius: 12px;
+  }
+
+  /* Lifts toward the cursor; the shadow stretches so it reads as physical. */
+  .lift {
+    transition:
+      transform 180ms cubic-bezier(0.3, 0.7, 0.4, 1.4),
+      box-shadow 180ms ease;
+  }
+  .lift:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 var(--shadow);
+  }
+
+  /* ---- Buttons ---------------------------------------------------- */
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.5rem;
+    padding: 0 1rem;
+    border-radius: 10px;
+    border: 1.5px solid var(--edge);
+    background: var(--card);
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    box-shadow: 2px 2px 0 var(--shadow);
+    cursor: pointer;
+    user-select: none;
+    transition:
+      transform 120ms ease,
+      box-shadow 120ms ease,
+      background-color 150ms ease;
+  }
+  .btn:hover {
+    background: var(--card-2);
+  }
+  /* Pressing pushes the button into its own shadow. */
+  .btn:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 var(--shadow);
+  }
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .btn-ink {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .btn-ink:hover {
+    background: var(--ink-2);
+  }
+  [data-theme="dark"] .btn-ink {
+    box-shadow: 2px 2px 0 var(--hl);
+  }
+
+  .btn-hl {
+    background: var(--hl);
+    color: #1a1915;
+    border-color: #1a1915;
+  }
+  .btn-hl:hover {
+    background: color-mix(in oklab, var(--hl) 85%, white);
+  }
+
+  .btn-danger {
+    background: var(--red);
+    color: #fff;
+    border-color: var(--edge);
+  }
+  .btn-danger:hover {
+    background: color-mix(in oklab, var(--red) 88%, black);
+  }
+
+  .btn-ghost {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+  .btn-ghost:hover {
+    background: var(--card-2);
+    border-color: var(--rule);
+  }
+
+  .btn-sm {
+    height: 2rem;
+    padding: 0 0.7rem;
+    font-size: 0.8125rem;
+    border-radius: 8px;
+  }
+
+  .icon-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 8px;
+    color: var(--ink-3);
+    transition:
+      background-color 150ms,
+      color 150ms;
+  }
+  .icon-btn:hover {
+    background: var(--card-2);
+    color: var(--ink);
+  }
+  .icon-btn.danger:hover {
+    background: var(--red-wash);
+    color: var(--red);
+  }
+
+  /* ---- Forms ------------------------------------------------------ */
 
   .field {
     width: 100%;
-    background-color: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 0.5rem;
-    padding: 0.5rem 0.625rem;
-    font-size: 0.875rem;
+    height: 2.75rem;
+    background-color: var(--card);
+    border: 1.5px solid color-mix(in oklab, var(--edge) 35%, var(--rule));
+    border-radius: 10px;
+    padding: 0 0.85rem;
+    font-size: 0.9375rem;
     color: var(--ink);
+    transition:
+      border-color 150ms,
+      box-shadow 150ms;
   }
-
+  select.field {
+    appearance: none;
+    padding-right: 2.25rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23736d5f' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+  }
+  textarea.field {
+    height: auto;
+    padding: 0.65rem 0.85rem;
+  }
   .field::placeholder {
-    color: var(--ink-muted);
-    opacity: 0.7;
+    color: var(--ink-3);
+    opacity: 0.75;
   }
-
+  .field:hover {
+    border-color: color-mix(in oklab, var(--edge) 60%, var(--rule));
+  }
   .field:focus {
     outline: none;
-    border-color: var(--accent);
+    border-color: var(--ink);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--hl) 70%, transparent);
+  }
+  .field[aria-invalid="true"] {
+    border-color: var(--red);
+  }
+  .field-lg {
+    height: 3.5rem;
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
   }
 
   .label {
     display: block;
-    font-size: 0.75rem;
+    margin-bottom: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  /* Segmented radio group (Expense / Income, payment methods). */
+  .segmented {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-radius: 12px;
+    background: var(--card-2);
+    border: 1.5px solid var(--rule);
+  }
+  .segmented label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    min-height: 2.25rem;
+    padding: 0 0.5rem;
+    border-radius: 8px;
+    border: 1.5px solid transparent;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--ink-3);
+    cursor: pointer;
+    transition:
+      background-color 150ms,
+      color 150ms;
+  }
+  .segmented label:has(input:checked) {
+    background: var(--card);
+    color: var(--ink);
+    border-color: var(--edge);
+    box-shadow: 2px 2px 0 var(--shadow);
+  }
+  .segmented label:has(input:focus-visible) {
+    outline: 2px solid var(--ink);
+    outline-offset: 1px;
+  }
+
+  /* Wrap-able chip radios. */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .chips label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    height: 2rem;
+    padding: 0 0.75rem;
+    border-radius: 999px;
+    border: 1.5px solid var(--rule);
+    background: var(--card);
+    font-size: 0.8125rem;
     font-weight: 500;
-    color: var(--ink-muted);
-    margin-bottom: 0.25rem;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: all 150ms;
+  }
+  .chips label:hover {
+    border-color: var(--ink-3);
+  }
+  .chips label:has(input:checked) {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .chips label:has(input:focus-visible) {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  /* ---- Type ------------------------------------------------------- */
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  /* A highlighter stroke behind the words, drawn in from the left. */
+  .hl {
+    background-image: linear-gradient(
+      100deg,
+      transparent 0.4em,
+      color-mix(in oklab, var(--hl) 85%, transparent) 0.5em,
+      var(--hl) 96%,
+      transparent
+    );
+    background-repeat: no-repeat;
+    background-size: 100% 0.62em;
+    background-position: 0 88%;
+    padding: 0 0.12em;
+    margin: 0 -0.12em;
+    animation: hl-in 900ms 250ms cubic-bezier(0.6, 0, 0.2, 1) both;
+  }
+  [data-theme="dark"] .hl {
+    color: inherit;
+    background-image: linear-gradient(
+      100deg,
+      transparent 0.4em,
+      color-mix(in oklab, var(--hl) 45%, transparent) 0.5em,
+      color-mix(in oklab, var(--hl) 55%, transparent) 96%,
+      transparent
+    );
+  }
+
+  .hand {
+    font-family: var(--font-hand);
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .bn {
+    font-family: var(--font-bn);
+  }
+
+  /* ---- Bits ------------------------------------------------------- */
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    height: 1.375rem;
+    padding: 0 0.5rem;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  /* Hairline with a dashed tear, like a receipt's perforation. */
+  .perf {
+    border: 0;
+    border-top: 1.5px dashed var(--rule);
+  }
+
+  /* Zig-zag torn edge along the bottom of a receipt. */
+  .receipt-edge {
+    position: relative;
+  }
+  .receipt-edge::after {
+    content: "";
+    position: absolute;
+    left: -1.5px;
+    right: -1.5px;
+    bottom: -9px;
+    height: 10px;
+    background:
+      linear-gradient(-45deg, transparent 6px, var(--card) 0) 0 0 / 12px 10px repeat-x,
+      linear-gradient(45deg, transparent 6px, var(--card) 0) 0 0 / 12px 10px repeat-x;
+  }
+
+  /* A tooltip on anything with data-tip; content goes in via attr(), which
+     the browser treats as text, never markup. */
+  [data-tip] {
+    position: relative;
+  }
+  [data-tip]:hover::after,
+  [data-tip]:focus-visible::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%);
+    z-index: 30;
+    padding: 0.35rem 0.55rem;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    white-space: pre;
+    pointer-events: none;
+    animation: pop 140ms ease-out;
   }
 
   /* Tables too wide for a phone scroll inside their own box, never the page. */
   .scroll-x {
     overflow-x: auto;
     overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Skeleton shimmer for loading.jsx. */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--card-2) 0%,
+      color-mix(in oklab, var(--card-2) 50%, var(--card)) 50%,
+      var(--card-2) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.3s linear infinite;
+    border-radius: 8px;
+  }
+
+  /* Native <dialog>, styled as a bottom sheet on phones and a card above. */
+  dialog.sheet {
+    margin: auto auto 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: 92dvh;
+    padding: 0;
+    border: 1.5px solid var(--edge);
+    border-bottom: 0;
+    border-radius: 18px 18px 0 0;
+    background: var(--card);
+    color: var(--ink);
+    overflow: auto;
+  }
+  dialog.sheet[open] {
+    animation: sheet-up 320ms cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  dialog.sheet::backdrop {
+    background: rgb(17 16 14 / 0.45);
+    backdrop-filter: blur(2px);
+    animation: fade 200ms ease-out;
+  }
+  @media (min-width: 640px) {
+    dialog.sheet {
+      margin: auto;
+      max-width: 30rem;
+      border-bottom: 1.5px solid var(--edge);
+      border-radius: 16px;
+      box-shadow: 6px 6px 0 var(--shadow);
+    }
+    dialog.sheet[open] {
+      animation: dialog-in 260ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Motion                                                              *
+ * ------------------------------------------------------------------ */
+
+@layer utilities {
+  /* Staggered entrance: set --i on each child for its place in line. */
+  .rise {
+    animation: rise 620ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+
+  /* A receipt feeding out of the printer, top to bottom. */
+  .print {
+    animation: print 900ms steps(14, end) both;
+    animation-delay: calc(var(--i, 0) * 70ms + 200ms);
+  }
+
+  .grow-x {
+    transform-origin: left center;
+    animation: grow-x 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 60ms + 150ms);
+  }
+
+  .grow-y {
+    transform-origin: center bottom;
+    transform-box: fill-box;
+    animation: grow-y 800ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 50ms + 150ms);
+  }
+
+  .pop-in {
+    animation: pop-in 420ms cubic-bezier(0.3, 1.4, 0.5, 1) both;
+    animation-delay: calc(var(--i, 0) * 25ms + 200ms);
+  }
+
+  .draw {
+    animation: draw 1200ms cubic-bezier(0.6, 0, 0.2, 1) 200ms both;
+  }
+
+  .stamp {
+    animation: stamp 700ms cubic-bezier(0.3, 1.5, 0.5, 1) 900ms both;
+  }
+
+  .spin-slow {
+    animation: spin 22s linear infinite;
+  }
+
+  .marquee {
+    animation: marquee 40s linear infinite;
+  }
+  .marquee:hover {
+    animation-play-state: paused;
+  }
+
+  .wobble:hover {
+    animation: wobble 500ms ease-in-out;
+  }
+
+  .blink {
+    animation: blink 1s steps(2, start) infinite;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes print {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 -12px 0);
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes grow-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+@keyframes draw {
+  from {
+    stroke-dashoffset: var(--len, 1000);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes stamp {
+  0% {
+    opacity: 0;
+    transform: scale(2.2) rotate(-24deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.94) rotate(-9deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-8deg);
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes wobble {
+  25% {
+    transform: rotate(-6deg);
+  }
+  75% {
+    transform: rotate(6deg);
+  }
+}
+@keyframes hl-in {
+  from {
+    background-size: 0% 0.62em;
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 4px);
+  }
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Odometer — digits roll into place, pure CSS                         *
+ * ------------------------------------------------------------------ *
+ * Each digit is a 0–9 strip in a one-digit window, translated to its
+ * value. The server renders the final position, so without CSS
+ * animation (or with reduced motion) the right number is simply there. */
+
+.odo {
+  display: inline-flex;
+  align-items: flex-start;
+  line-height: 1;
+}
+.odo-col {
+  display: inline-block;
+  height: 1.08em;
+  overflow: hidden;
+}
+.odo-strip {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(calc(var(--d) * -1.08em));
+  animation: odo 1400ms cubic-bezier(0.2, 0.85, 0.25, 1) both;
+  animation-delay: calc(var(--c, 0) * 60ms + 150ms);
+}
+.odo-strip > span {
+  height: 1.08em;
+  line-height: 1.08em;
+}
+@keyframes odo {
+  from {
+    transform: translateY(0);
   }
 }
