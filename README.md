@@ -102,12 +102,59 @@ tests/                    node --test suites for the pure modules
 
 ## Deploying
 
-The app keeps state in one SQLite file, so it needs a host with a **persistent disk**: a VPS,
-Railway, Render or Fly.io with a volume, pointing `DATABASE_PATH` at the volume. Serverless
-platforms with ephemeral filesystems (e.g. Vercel) would lose data between invocations.
+The whole app is one Node process and one SQLite file, so it needs a host with a **persistent
+disk**: a VPS, Railway, Render or Fly.io with a volume. Serverless platforms with an ephemeral
+filesystem (e.g. Vercel, Netlify) would lose every account between requests. Run **one
+instance**: SQLite is a single file, so it can't be shared by several containers.
 
-Behind a reverse proxy, make sure it sets `X-Forwarded-For` and `X-Forwarded-Proto`; the rate
-limiter and the CSP's `upgrade-insecure-requests` read them.
+### Docker (recommended)
+
+```bash
+docker build -t budgetbd .
+docker run -d --name budgetbd -p 3000:3000 -v budgetbd-data:/data --restart unless-stopped budgetbd
+```
+
+The image is multi-stage. It installs from the lockfile with install scripts disabled, builds
+Next's `standalone` output, and runs as the unprivileged `node` user with only the traced
+files. The database lives on the `/data` volume, and a `HEALTHCHECK` polls `/api/health`.
+CI builds this image on every push and checks that it boots, serves pages with the CSP and
+restarts cleanly.
+
+### Render / Railway / Fly.io
+
+Point the platform at the `Dockerfile`. Attach a volume mounted at `/data` and set the health
+check path to `/api/health`. The platform's proxy terminates HTTPS, which the app needs: the
+session cookie is `Secure` in production, so plain HTTP logins won't stick (`localhost` excepted).
+
+### Plain Node (VPS)
+
+```bash
+npm ci --ignore-scripts && npm run build
+DATABASE_PATH=/var/lib/budgetbd/budget.db PORT=3000 npm start
+```
+
+Put nginx or Caddy in front for HTTPS, and run the process under systemd or pm2 so it restarts.
+
+### Configuration
+
+All optional; see [`.env.example`](.env.example).
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `DATABASE_PATH` | `./data/budget.db` (`/data/budget.db` in Docker) | Where the SQLite file lives |
+| `TRUSTED_PROXY_HOPS` | `1` | Proxies in front of the app; used to find the real client IP for rate limiting. Use `2` for Cloudflare → nginx. |
+| `SERVER_ACTIONS_ALLOWED_ORIGINS` | — | **Build-time.** Extra hosts allowed to submit forms, only if a proxy rewrites `Host`. |
+| `PORT` / `HOSTNAME` | `3000` / `0.0.0.0` | Where the server listens |
+
+### Backups
+
+The database runs in WAL mode, so copy it with SQLite's backup command rather than `cp` while the
+app is running:
+
+```bash
+docker exec budgetbd node -e "new (require('node:sqlite').DatabaseSync)('/data/budget.db').exec(\"VACUUM INTO '/data/backup.db'\")"
+docker cp budgetbd:/data/backup.db ./budgetbd-$(date +%F).db
+```
 
 ---
 
